@@ -24,11 +24,11 @@ func genMap() string {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	s := r.Int63n(1000000)
 	n := opensimplex.NewWithSeed(s)
-	img := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{SIZE, SIZE}})
+	img := image.NewNRGBA(image.Rectangle{image.Point{0, 0}, image.Point{SIZE, SIZE}})
 	for x := 0; x < SIZE; x++ {
 		for y := 0; y < SIZE; y++ {
 			h := uint8(noise(n, x, y) * 256)
-			img.Set(x, y, color.RGBA{h, h, h, h})
+			img.Set(x, y, color.NRGBA{h, h, h, h})
 		}
 	}
 
