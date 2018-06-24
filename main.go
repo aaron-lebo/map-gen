@@ -8,6 +8,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"math/rand"
 	"net/http"
 	"os"
 	"time"
@@ -20,8 +21,9 @@ func noise(n *opensimplex.Noise, x, y int) float64 {
 }
 
 func genMap() string {
-	now := time.Now().UnixNano()
-	n := opensimplex.NewWithSeed(now)
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	s := r.Int63n(1000000)
+	n := opensimplex.NewWithSeed(s)
 	img := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{SIZE, SIZE}})
 	for x := 0; x < SIZE; x++ {
 		for y := 0; y < SIZE; y++ {
@@ -30,14 +32,16 @@ func genMap() string {
 		}
 	}
 
-	file, err := os.Create(fmt.Sprintf("static/maps/%d.png", now))
-	if err != nil {
-		panic(err.Error())
+	filename := fmt.Sprintf("static/maps/%d.png", s)
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		file, err := os.Create(filename)
+		if err != nil {
+			panic(err.Error())
+		}
+		defer file.Close()
+		png.Encode(file, img)
 	}
-	defer file.Close()
-
-	png.Encode(file, img)
-	return file.Name()
+	return filename
 }
 
 func main() {
@@ -50,7 +54,7 @@ func main() {
 	e.Static("/dist", "static/dist")
 	e.Static("/static", "static")
 
-	e.GET("/maps/new", func(c echo.Context) error {
+	e.POST("/maps/new", func(c echo.Context) error {
 		return c.String(http.StatusOK, genMap())
 	})
 
